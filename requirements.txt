@@ -1,0 +1,17 @@
+anomalib
+torch
+torchvision
+pytorch-lightning
+lightning
+opencv-python
+imgaug
+numpy==1.26.4
+kornia
+pandas
+scikit-learn
+timm
+einops
+python-dotenv
+FrEIA
+open_clip_torch
+
