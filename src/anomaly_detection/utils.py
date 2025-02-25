@@ -6,11 +6,6 @@ import numpy as np
 from anomalib.utils.post_processing import superimpose_anomaly_map
 
 
-
-
-
-
-
 #PLOTTING STUFF
 def show_good_samples(training_datamodule):
     number_of_images_to_show = 3
@@ -85,3 +80,36 @@ def save_images(predictions):
         fig, ax = plt.subplots()
         display_anomalymap(image, anomaly_map, score, ax, save_path)
 
+
+#IMAGE HISTOGRAM
+def histogram(gray, plot=False):
+    """
+    Compute the histogram of a grayscale image.
+    :param gray: grayscale image
+    :param plot: (bool)
+    :return: (dict) histogram
+    """
+    hist, bins = np.histogram(gray, bins=26, range=(0, 255))
+
+    if plot:
+        # Create figure with 2 subplots
+        fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+        # Plot grayscale image
+        axes[0].imshow(gray, cmap='gray')
+        axes[0].set_title("Grayscale Image")
+        axes[0].axis("off")  # Hide axes
+
+        # Plot histogram
+        axes[1].plot(bins[:-1], hist, color='black')
+        axes[1].set_title("Brightness Histogram")
+        axes[1].set_xlabel("Normalized Brightness (0=Dark, 1=Bright)")
+        axes[1].set_ylabel("Pixel Count")
+        axes[1].grid(True)
+
+        plt.tight_layout()
+        plt.show()
+
+    tot = sum(hist)
+    histo_dict = {k: n / tot for n, k in zip(hist, bins[:-1])}
+    return histo_dict

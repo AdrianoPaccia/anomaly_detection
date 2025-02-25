@@ -1,0 +1,30 @@
+from setuptools import setup, find_packages
+
+setup(
+    name="anomaly_detection",
+    version="0.1",
+    readme="README.md",
+    #requires_python>=3.10,
+    packages=find_packages(where="src"),
+    package_dir={"": "src"},
+    include_package_data=True,
+    install_requires=[
+        "anomalib",
+        "torch",
+        "torchvision",
+        "pytorch-lightning",
+        "lightning",
+        "matplotlib==3.7.0",
+        "opencv-python",
+        "imgaug",
+        "numpy==1.26.4",
+        "kornia",
+        "pandas",
+        "scikit-learn",
+        "timm",
+        "einops",
+        "python-dotenv",
+        "FrEIA",
+        "open_clip_torch",
+    ],
+)

@@ -32,9 +32,7 @@ if __name__ == "__main__":
 
     args.add_argument("--task", required=True, type=str, help="Name of the task")
     args.add_argument("--task_folder", required=True, type=str, help="Name of task folder (dataset).")
-
     args.add_argument("--fps", type=int, default=30, help="Frames per second for video.")
-
     args.add_argument("--dataset_folder", default="data", type=str, help="Folder containing datasets.")
     args = args.parse_args()
 

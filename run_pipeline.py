@@ -1,9 +1,11 @@
 import argparse
-from src.patchcore import test, train, process_frames
-from src.data_collection import extract_frames
+from anomaly_detection.patchcore import test, train, process_frames
+from anomaly_detection.data_collection import extract_frames
 import matplotlib
 matplotlib.use('TkAgg')  # This will force matplotlib to use an interactive backend
 import os
+from anomalib.models import Patchcore
+from pathlib import Path
 
 
 if __name__ == "__main__":
@@ -33,6 +35,9 @@ if __name__ == "__main__":
 
     dataset_path = os.path.join(os.getcwd(), args.dataset_folder, args.task)
     weights_path = os.path.join(os.getcwd(), args.weights_folder)
+    segment_path = os.path.join(dataset_path, 'segment')
+    detect_path = os.path.join(dataset_path, 'detect')
+    heatmap_path = os.path.join(dataset_path, 'heatmap')
 
     if args.train:
         train(
@@ -53,13 +58,14 @@ if __name__ == "__main__":
         frames_folder = os.path.join(dataset_path, args.frame_folder)
         if not os.path.isdir(frames_folder):
             extract_frames(video_path, frames_folder, frame_interval=1)
-        predictions = process_frames(
+
+        process_frames(
             task_name=args.task,
-            dataset_path=frames_folder,
-            weights_path=weights_path,
-            heatmap_path=os.path.join(dataset_path, 'heatmap'),
-            segment_path=os.path.join(dataset_path, 'segment'),
-            detect_path=os.path.join(dataset_path, 'detect'),
+            dataset_path=Path(frames_folder),
+            weights_path=Path(weights_path),
+            heatmap_path=Path(heatmap_path),
+            segment_path=Path(segment_path),
+            detect_path=Path(detect_path),
             segmentation=args.segment,
             detection=args.detect,
             heatmapping=args.heatmap,

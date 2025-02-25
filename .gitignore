@@ -5,3 +5,7 @@ videos
 results
 weights
 .idea/
+build/
+dist/
+
+*.egg*

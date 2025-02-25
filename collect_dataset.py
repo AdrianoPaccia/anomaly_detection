@@ -1,6 +1,6 @@
 import argparse
 import os
-from src.data_collection import extract_semiframes, extract_frames, assemble_frames
+from anomaly_detection.data_collection import extract_semiframes, extract_frames, assemble_frames
 
 
 if __name__ == "__main__":
