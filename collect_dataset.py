@@ -1,7 +1,7 @@
 import argparse
 import os
-from anomaly_detection.data_collection import extract_semiframes, extract_frames, assemble_frames
-
+from anomaly_detection.data_collection import extract_frames
+from anomaly_detection.utils import dataset_split_and_save
 
 if __name__ == "__main__":
     args = argparse.ArgumentParser()
@@ -17,17 +17,46 @@ if __name__ == "__main__":
     args.add_argument("--dataset_folder", default="data", type=str, help="Folder containing weights.")
     args = args.parse_args()
 
-    if args.extract_semiframes:
-        video_path = os.path.join(os.getcwd(), "videos", f"{args.task}.mp4")
-        output_folder = os.path.join(os.getcwd(), "data", args.task, "semi_frames")
-        extract_semiframes(video_path, output_folder, frame_interval=args.frame_interval)
+    data_path = os.path.join(os.getcwd(), "data", args.task)
+    video_path = os.path.join(os.getcwd(), "videos", f"{args.task}.mp4")
 
-    if args.extract_frames:
-        video_path = os.path.join(os.getcwd(), "videos", f"{args.task}.mp4")
-        output_folder = os.path.join(os.getcwd(), "data", args.task, "test_resize" if args.resize else "test")
-        extract_frames(video_path, output_folder, frame_interval=5, resize=args.resize)
 
-    if args.assemble_dataset:
+
+    from_semiframes = True
+    split_ratio = 0.8
+
+    if from_semiframes:
+        from anomaly_detection.data_collection import extract_empty_semiframes, assemble_semiframes
+
+        #extract semiframes
+        semiframes_path = os.path.join(data_path, "semi_frames")
+        if not os.path.isdir(semiframes_path) or len(os.listdir(semiframes_path))==0:
+            print('Extracting frames')
+            extract_empty_semiframes(
+                video_path=video_path,
+                output_path=semiframes_path,
+                empty_sample=os.path.join(data_path, "empty_sample.png"),
+                frame_interval=args.frame_interval)
+
+        #assemble frames
+        print('Assembling frames')
+        output_path = os.path.join(os.getcwd(), "data", args.task, f"train{'_resize' if args.resize else ''}/OK")
+        assemble_semiframes(args.n_samples, semiframes_path, output_path)
+
+    else:
+        from anomaly_detection.data_collection import assemble_frames
+
         semiframes_path = os.path.join(os.getcwd(), "data", args.task, "semi_frames")
-        output_folder = os.path.join(os.getcwd(), "data", args.task, f"train{'_resize' if args.resize else ''}/OK")
-        assemble_frames(args.n_samples, semiframes_path, output_folder, resize=args.resize)
+        output_path = os.path.join(os.getcwd(), "data", args.task, f"train/OK")
+        assemble_frames(args.n_samples, semiframes_path, output_path, resize=args.resize)
+
+    #collect and save also train and test dataset
+    print('Assembling Test and Val datasets')
+    output_path = os.path.join(os.getcwd(), "data", args.task, "test")
+    frames = extract_frames(video_path, output_path, frame_interval=5, save=False)
+    dataset_split_and_save(
+        dataset=frames,
+        path1=os.path.join(os.getcwd(), "data", args.task, "test"),
+        path2=os.path.join(os.getcwd(), "data", args.task, "val"),
+        split_ratio=split_ratio
+    )

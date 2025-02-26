@@ -18,15 +18,19 @@ from pathlib import Path
 size = 512 #(256, 256)
 
 def preprocess_data(dataset_path, normal_folder, abnormal_dir, batch_size):
+
+    print('Process data')
+
     transform = transforms.Compose([
         transforms.Resize((size, size)),
     ])
-    # Load our dataset in a datamodule for the model to train on
+
+    # load the dataset in a datamodule
     datamodule = Folder(
         name='profile',
         root=dataset_path,
-        normal_dir=normal_folder,  # Path to the anomaly free images (for training)
-        abnormal_dir=abnormal_dir,  # Path to the anomalous images (for validation)
+        normal_dir=normal_folder,
+        abnormal_dir=abnormal_dir,
         task="classification",
         image_size=size,
         num_workers=0,
@@ -44,9 +48,10 @@ def test(task_name, weights_path, test_folder):
     model = Patchcore()
     model.load_state_dict(torch.load(os.path.join(weights_path, f'patchcore_checkpoint_{task_name}.pt')))
 
+    # load the engine
     engine = Engine(task="classification")
 
-    # Predict
+    # predict make predictions
     with torch.no_grad():
         predictions = engine.predict(
             model=model,
@@ -61,10 +66,10 @@ def train(
         weights_path,
         save_weights=True,
         train_folder='train/OK',
-        eval_folder='val/NG',
+        eval_folder='val',
         batch_size=32
     ):
-    print('Process data')
+
     training_datamodule = preprocess_data(
         dataset_path,
         normal_folder=train_folder,
@@ -88,17 +93,18 @@ def get_segment(original_image:np.ndarray, heatmap_image:np.ndarray, threshold:f
     mask = (heatmap_image ** 2 + 0.2 > threshold)
     return Image.fromarray((original_image * mask).astype(np.uint8))
 
+
 def get_heatmap(original_image:np.ndarray, heatmap_image:np.ndarray):
     anomaly_map = np.array((1. - heatmap_image) * 255).astype(np.uint8)
     heat_img = superimpose_anomaly_map(anomaly_map=anomaly_map, image=img, normalize=False)
     return Image.fromarray(heat_img.astype(np.uint8))
+
 
 def get_detect(original_image:np.ndarray, boxes:list, score:float):
     # superimpose bounding boxes
     for (x1, y1, x2, y2) in boxes:
         detect_img = cv2.rectangle(original_image, (x1, y1), (x2, y2), (255, 0, 0), 2)
     detect_img = Image.fromarray(detect_img.astype(np.uint8))
-
     # add score
     draw = ImageDraw.Draw(detect_img)
     font = ImageFont.load_default()
@@ -106,6 +112,7 @@ def get_detect(original_image:np.ndarray, boxes:list, score:float):
     position = (10, 5)  # X, Y coordinates
     draw.text(position, text, font=font, fill=(255, 0, 0))
     return detect_img
+
 
 def process_frames(
         task_name: str,

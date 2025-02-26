@@ -1,12 +1,19 @@
 import numpy as np
 from PIL import Image
 import cv2
-from scipy import ndimage
 
-def blend_images(image1, image2, overlap, direction="horizontal", blur=True):
-    """ Blend two images with a smooth transition along the given direction. """
+def blend_images(image1: Image, image2: Image, overlap: float, direction="horizontal", blur=True):
+    """
+    Blend two images with a smooth transition along the given direction.
+
+    :param image1: first image
+    :param image2: second image
+    :param overlap: (float) dimention of the overlapping section
+    :param direction: (horizontal, vertical) direction of the image stitching
+    :param blur: (bool) to use a Gaussian Blur filter on the overlapping section
+    :return: final blended image
+    """
     width, height = image1.size
-    new_size = (width * 2, height) if direction == "horizontal" else (width, height * 2)
     img1, img2 = np.array(image1), np.array(image2)
 
     if direction == "horizontal":
@@ -31,24 +38,31 @@ def blend_images(image1, image2, overlap, direction="horizontal", blur=True):
     return Image.fromarray(final_img)
 
 
-def blend_law(i, n, mode="linear"):
+def blend_law(idx, tot, mode="linear"):
     if mode == "linear":
-        return 1. - i / n
+        return 1. - idx / tot
     elif mode == "quadratic":
-        return 1. - (i / n) ** 2
+        return 1. - (idx / tot) ** 2
     elif mode == "cubic":
-        return 1. - (i / n) ** 3
+        return 1. - (idx / tot) ** 3
     elif mode == "exponential":
-        return np.exp(-i / n)
+        return np.exp(-idx / tot)
     else:
         raise ValueError(f"Unknown mode: {mode}")
 
 
-def get_gradient_mask(size, direction="horizontal"):
+def get_gradient_mask(size, direction="horizontal", blending_mode="exponential"):
+    """
+    Compute the gradient mask for a given size and direction.
+    :param size: (int) size of the section to compute the gradient mask on
+    :param direction: (horizontal, vertical) direction of the gradient
+    :param blending_mode:  (linear, quadratic, cubic, exponential) mode of blending
+    :return:
+    """
     width, height = size
     gradient = np.expand_dims(
         np.array(
-            [blend_law(i, width, "exponential") for i in range(width)]
+            [blend_law(i, width, mode=blending_mode) for i in range(width)]
         ), -1
     )
     mask = np.ones((height, width, 1)) * gradient
@@ -58,21 +72,7 @@ def get_gradient_mask(size, direction="horizontal"):
         return np.transpose(mask, (1, 0, 2))
 
 
-def sobel_filter(image):
-    sobel_h = ndimage.sobel(image, 0)  # horizontal gradient
-    sobel_v = ndimage.sobel(image, 1)  # vertical gradient
-    magnitude = np.sqrt(sobel_h ** 2 + sobel_v ** 2)
-    magnitude *= 255.0 / np.max(magnitude)  # normalization
-    return magnitude
-
-
 def split_frames(image):
-    """
-    Splits an image into left and right halves and saves them separately.
-
-    Parameters:
-    - image: Input frame (numpy array).
-    """
     h, w = image.shape[:2]
     mid_w = w // 2  # Midpoint for splitting
     mid_h = h // 2

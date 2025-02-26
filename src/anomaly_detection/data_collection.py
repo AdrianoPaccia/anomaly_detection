@@ -6,30 +6,10 @@ from PIL import Image
 from tqdm import tqdm
 import string
 from anomaly_detection.image_process import blend_images, split_frames
-from anomaly_detection.utils import histogram
+from anomaly_detection.utils import histogram, get_histo_distance
+from pathlib import Path
 
-
-def is_empty_section(image, brightness_threshold=100, cnt_threshold=0.05, plot=False):
-    """
-    Checks if a split image is mostly dark and free of bright objects.
-
-    Parameters:
-    - image: Input frame (numpy array).
-    - brightness_threshold: Max brightness to be considered "dark."
-    - max_bright_ratio: Max percentage of bright pixels allowed.
-
-    Returns:
-    - True if the frame is good, False otherwise.
-    """
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    histo_dict = histogram(
-        gray,
-        plot=plot)
-    score = sum([v for k, v in histo_dict.items() if k>brightness_threshold])
-    return score # Return True if mostly dark
-
-
-def extract_frames(video_path, output_folder, frame_interval=5, resize=False):
+def extract_frames(video_path, output_folder, frame_interval=5, save=False):
     """
     Extracts frames from a video and saves them as images.
 
@@ -38,12 +18,10 @@ def extract_frames(video_path, output_folder, frame_interval=5, resize=False):
     - output_folder: Folder to save extracted frames.
     - frame_interval: Save one frame every 'frame_interval' frames.
     """
-    os.makedirs(output_folder, exist_ok=True)
-
+    print(f'Extracting frames from {video_path}...')
     cap = cv2.VideoCapture(video_path)
-    frame_count = 0
-    saved_count = 0
-    os.makedirs(output_folder, exist_ok=True)
+    frame_count, saved_count = 0, 0
+    saved_images = {}
 
     while cap.isOpened():
         ret, frame = cap.read()
@@ -52,19 +30,27 @@ def extract_frames(video_path, output_folder, frame_interval=5, resize=False):
 
         if frame_count % frame_interval == 0:
             filename = f"frame_{saved_count:04d}.png"
-            if resize:
-                frame = cv2.resize(frame, (256, 256))
-            cv2.imwrite(os.path.join(output_folder, filename), frame)
+
+            if save:
+                os.makedirs(output_folder, exist_ok=True)
+                cv2.imwrite(os.path.join(output_folder, filename), frame)
+            else:
+                saved_images[filename] = frame
             saved_count += 1
 
         frame_count += 1
 
     cap.release()
-    print(f"Extracted {saved_count} frames and saved to {output_folder}")
-    pass
+    print(f"Extracted {saved_count} frames")
+    return saved_images
 
 
-def extract_semiframes(video_path, output_folder, frame_interval=5):
+def extract_empty_semiframes(
+        video_path: Path,
+        output_path: Path,
+        empty_sample: Path,
+        frame_interval=5
+    ) -> None:
     """
     Extracts semi-frames from a video, filer the empty ones and saves them as images.
 
@@ -73,13 +59,17 @@ def extract_semiframes(video_path, output_folder, frame_interval=5):
     - output_folder: Folder to save extracted frames.
     - frame_interval: Save one frame every 'frame_interval' frames.
     """
-    os.makedirs(output_folder, exist_ok=True)
+    os.makedirs(output_path, exist_ok=True)
 
     cap = cv2.VideoCapture(video_path)
     frame_count = 0
     saved_count = 0
     for i in range(4):
-        os.makedirs(os.path.join(output_folder, f"sf_{i}"), exist_ok=True)
+        os.makedirs(os.path.join(output_path, f"sf_{i}"), exist_ok=True)
+
+    #analize empty sample
+    empty_frame = Image.fromarray(cv2.imread(empty_sample))
+    empty_histo = histogram(empty_frame)
 
     while cap.isOpened():
         ret, frame = cap.read()
@@ -90,18 +80,19 @@ def extract_semiframes(video_path, output_folder, frame_interval=5):
             filename = f"semiframe_{saved_count:04d}.png"
             splitted_frames = split_frames(frame)
             for i, f in enumerate(splitted_frames):
-                score = is_empty_section(f, cnt_threshold=0.06, plot=False)
-                if score > 0.02 and score < 0.063:
-                    cv2.imwrite(os.path.join(output_folder, f"sf_{i}", filename), f)
+                gray = cv2.cvtColor(f, cv2.COLOR_BGR2GRAY)
+                img_histo = histogram(gray, plot=False)
+                if get_histo_distance(empty_histo, img_histo) < 0.18:
+                    cv2.imwrite(os.path.join(output_path, f"sf_{i}", filename), f)
                     saved_count += 1
 
         frame_count += 1
 
     cap.release()
-    print(f"Extracted {saved_count} frames and saved to {output_folder}")
+    print(f"Extracted {saved_count} frames and saved to {output_path}")
 
 
-def assemble_frames(n, semiframes_path, output_folder, overlap=3, resize=False):
+def assemble_semiframes(n, semiframes_path, output_folder, overlap=3):
     '''
     Assemble image-frames with the combination of the semiframes in the folders.
     :param n:
@@ -123,9 +114,7 @@ def assemble_frames(n, semiframes_path, output_folder, overlap=3, resize=False):
         for k, v in folders.items()
     }
 
-    items = range(n)
-
-    for i in tqdm(items, desc="Processing items", unit="item"):
+    for _ in tqdm(range(n), desc="Processing items", unit="item"):
         # randomly select one image from each folder
         selected_images = {
             key: random.choice(files)
@@ -147,11 +136,7 @@ def assemble_frames(n, semiframes_path, output_folder, overlap=3, resize=False):
 
         # blend top and bottom halves vertically
         final_image = blend_images(top_half, bottom_half, overlap, "vertical")
-        if resize:
-            fi_ = cv2.resize(np.asarray(final_image), (256, 256))
-            final_image = Image.fromarray(fi_)
 
-        #img_name = f"image_{i + 1}"
         img_name = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
         final_image.save(os.path.join(output_folder, img_name + ".png"))
 

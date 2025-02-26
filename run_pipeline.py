@@ -2,9 +2,8 @@ import argparse
 from anomaly_detection.patchcore import test, train, process_frames
 from anomaly_detection.data_collection import extract_frames
 import matplotlib
-matplotlib.use('TkAgg')  # This will force matplotlib to use an interactive backend
+matplotlib.use('TkAgg')
 import os
-from anomalib.models import Patchcore
 from pathlib import Path
 
 
@@ -28,11 +27,12 @@ if __name__ == "__main__":
     args.add_argument("--dataset_folder", default="data", type=str, help="Folder containing weights.")
     args.add_argument("--test_folder", default="test", type=str, help="Folder containing weights.")
     args.add_argument("--train_folder", default="train/OK", type=str, help="Folder containing weights.")
-    args.add_argument("--eval_folder", default="val/NG", type=str, help="Folder containing weights.")
+    args.add_argument("--eval_folder", default="val", type=str, help="Folder containing weights.")
     args.add_argument("--frame_folder", default="frames", type=str, help="Folder containing weights.")
 
     args = args.parse_args()
 
+    # assemble the paths
     dataset_path = os.path.join(os.getcwd(), args.dataset_folder, args.task)
     weights_path = os.path.join(os.getcwd(), args.weights_folder)
     segment_path = os.path.join(dataset_path, 'segment')
@@ -44,8 +44,8 @@ if __name__ == "__main__":
             task_name=args.task,
             weights_path=weights_path,
             dataset_path=dataset_path,
-            train_folder=f"{args.train_folder}",
-            eval_folder=f"{args.eval_folder}",
+            train_folder=args.train_folder,
+            eval_folder=args.eval_folder,
             batch_size=args.batch_size,
         )
 
