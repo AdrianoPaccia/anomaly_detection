@@ -2,7 +2,7 @@ folders:
   weights_folder: "weights"  #Folder containing weights
   dataset_folder: "data" #Folder containing the datasets
   test_folder: "test" #Folder where to store the test set
-  train_folder: "train/OK" #Folder where to store the train set
+  train_folder: "train" #Folder where to store the train set
   eval_folder: "val" #Folder where to store the eval set
   frame_folder: "frames"  #Folder where to store the frames
   segment_folder: "segment" #Folder where to store segmentation maps
