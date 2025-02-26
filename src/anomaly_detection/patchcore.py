@@ -1,3 +1,5 @@
+import copy
+
 import matplotlib
 
 matplotlib.use('TkAgg')  # This will force matplotlib to use an interactive backend
@@ -96,14 +98,15 @@ def get_segment(original_image:np.ndarray, heatmap_image:np.ndarray, threshold:f
 
 def get_heatmap(original_image:np.ndarray, heatmap_image:np.ndarray):
     anomaly_map = np.array((1. - heatmap_image) * 255).astype(np.uint8)
-    heat_img = superimpose_anomaly_map(anomaly_map=anomaly_map, image=img, normalize=False)
+    heat_img = superimpose_anomaly_map(anomaly_map=anomaly_map, image=original_image, normalize=False)
     return Image.fromarray(heat_img.astype(np.uint8))
 
 
 def get_detect(original_image:np.ndarray, boxes:list, score:float):
+    detect_img = copy.deepcopy(original_image)
     # superimpose bounding boxes
     for (x1, y1, x2, y2) in boxes:
-        detect_img = cv2.rectangle(original_image, (x1, y1), (x2, y2), (255, 0, 0), 2)
+        detect_img = cv2.rectangle(detect_img, (x1, y1), (x2, y2), (255, 0, 0), 2)
     detect_img = Image.fromarray(detect_img.astype(np.uint8))
     # add score
     draw = ImageDraw.Draw(detect_img)

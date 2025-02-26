@@ -1,0 +1,19 @@
+folders:
+  weights_folder: "weights"  #Folder containing weights
+  dataset_folder: "data" #Folder containing the datasets
+  test_folder: "test" #Folder where to store the test set
+  train_folder: "train/OK" #Folder where to store the train set
+  eval_folder: "val" #Folder where to store the eval set
+  frame_folder: "frames"  #Folder where to store the frames
+  segment_folder: "segment" #Folder where to store segmentation maps
+  detect_folder: "detect" #Folder where to store detection maps
+  heatmap_folder: "heatmap" #Folder where to store heatmaps
+
+run_pipeline:
+  batch_size: 32
+  threshold: 0.5
+
+collect_dataset:
+  frame_interval: 5
+  n_samples: 100
+  split_ratio: 0.8

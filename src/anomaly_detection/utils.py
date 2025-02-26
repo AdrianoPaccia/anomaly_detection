@@ -3,6 +3,23 @@ from matplotlib import pyplot as plt
 import numpy as np
 import random
 import cv2
+import argparse
+import yaml
+
+def merge(args, conf):
+    """
+    Update args with YAML values
+    :param args: (Namespace)
+    :param conf: (dict)
+    """
+    if isinstance(args, argparse.Namespace) and isinstance(conf, dict):
+        for key, value in conf.items():
+            if not hasattr(args, key) or getattr(args, key) is None:
+                setattr(args, key, value)
+    else:
+        raise NotImplementedError
+
+    return
 
 #IMAGE HISTOGRAM
 def histogram(gray, plot=False, bins=26):
@@ -75,4 +92,9 @@ def dataset_split_and_save(dataset, path1, path2, split_ratio):
 
     print(f"Saved {cnt_1} items in {path1}")
     print(f"Saved {cnt_2} items in {path2}")
+
+
+
+
+
 
