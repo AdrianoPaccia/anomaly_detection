@@ -9,7 +9,11 @@ from anomaly_detection.image_process import blend_images, split_frames
 from anomaly_detection.utils import histogram, get_histo_distance
 from pathlib import Path
 
-def extract_frames(video_path, output_folder, frame_interval=5, save=False):
+def extract_frames(
+        video_path,
+        output_folder,
+        frame_interval=5,
+        save=False) -> dict:
     """
     Extracts frames from a video and saves them as images.
 
@@ -92,16 +96,18 @@ def extract_empty_semiframes(
     print(f"Extracted {saved_count} frames and saved to {output_path}")
 
 
-def assemble_semiframes(n, semiframes_path, output_folder, overlap=3):
-    '''
+def assemble_semiframes(
+        n_samples: int,
+        semiframes_path: Path,
+        output_folder: Path,
+        overlap: int=3) -> None:
+    """
     Assemble image-frames with the combination of the semiframes in the folders.
-    :param n:
-    :param semiframes_path:
-    :param output_folder:
-    :param overlap:
-    :param resize:
-    :return:
-    '''
+    :param n_samples: (int) Number of samples.
+    :param semiframes_path: (Path) Path to the folder containing the semiframes.
+    :param output_folder: (Path) Folder to save extracted frames.
+    :param overlap: (int) Number of pixels to overlap.
+    """
     folders = {
         "top_left": "sf_0",
         "top_right": "sf_1",
@@ -114,7 +120,7 @@ def assemble_semiframes(n, semiframes_path, output_folder, overlap=3):
         for k, v in folders.items()
     }
 
-    for _ in tqdm(range(n), desc="Processing items", unit="item"):
+    for _ in tqdm(range(n_samples), desc="Processing items", unit="item"):
         # randomly select one image from each folder
         selected_images = {
             key: random.choice(files)

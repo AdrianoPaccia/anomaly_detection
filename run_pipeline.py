@@ -52,7 +52,7 @@ if __name__ == "__main__":
         predictions = test(args.task, weights_path, test_folder)
 
     if args.segment or args.detect or args.heatmap:
-        frames_folder = os.path.join(dataset_path, 'frames_') #args.frame_folder)
+        frames_folder = os.path.join(dataset_path, args.frame_folder)
         if not os.path.isdir(frames_folder):
             video_path = os.path.join(os.getcwd(), "videos", f"{args.task}.mp4")
             extract_frames(video_path, frames_folder, frame_interval=1, save=True)

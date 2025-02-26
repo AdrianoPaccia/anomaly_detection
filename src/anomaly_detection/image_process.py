@@ -2,7 +2,13 @@ import numpy as np
 from PIL import Image
 import cv2
 
-def blend_images(image1: Image, image2: Image, overlap: float, direction="horizontal", blur=True):
+def blend_images(
+        image1: Image,
+        image2: Image,
+        overlap: float,
+        direction="horizontal",
+        blur=True
+    ) -> Image:
     """
     Blend two images with a smooth transition along the given direction.
 
@@ -38,22 +44,10 @@ def blend_images(image1: Image, image2: Image, overlap: float, direction="horizo
     return Image.fromarray(final_img)
 
 
-def blend_law(idx, tot, mode="linear"):
-    if mode == "linear":
-        return 1. - idx / tot
-    elif mode == "quadratic":
-        return 1. - (idx / tot) ** 2
-    elif mode == "cubic":
-        return 1. - (idx / tot) ** 3
-    elif mode == "exponential":
-        return np.exp(-idx / tot)
-    else:
-        raise ValueError(f"Unknown mode: {mode}")
-
-
-def get_gradient_mask(size, direction="horizontal", blending_mode="exponential"):
+def get_gradient_mask(size, direction="horizontal", blending_mode="exponential") -> np.ndarray:
     """
     Compute the gradient mask for a given size and direction.
+
     :param size: (int) size of the section to compute the gradient mask on
     :param direction: (horizontal, vertical) direction of the gradient
     :param blending_mode:  (linear, quadratic, cubic, exponential) mode of blending
@@ -71,6 +65,18 @@ def get_gradient_mask(size, direction="horizontal", blending_mode="exponential")
     else:
         return np.transpose(mask, (1, 0, 2))
 
+
+def blend_law(idx, tot, mode="linear"):
+    if mode == "linear":
+        return 1. - idx / tot
+    elif mode == "quadratic":
+        return 1. - (idx / tot) ** 2
+    elif mode == "cubic":
+        return 1. - (idx / tot) ** 3
+    elif mode == "exponential":
+        return np.exp(-idx / tot)
+    else:
+        raise ValueError(f"Unknown mode: {mode}")
 
 def split_frames(image):
     h, w = image.shape[:2]

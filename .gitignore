@@ -4,7 +4,6 @@ data
 videos
 results
 weights
-*/.idea/
 build/
 dist/
 

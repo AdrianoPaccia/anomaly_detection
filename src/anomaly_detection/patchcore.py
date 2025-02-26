@@ -19,8 +19,20 @@ from pathlib import Path
 
 size = 512 #(256, 256)
 
-def preprocess_data(dataset_path, normal_folder, abnormal_dir, batch_size):
+def preprocess_data(
+        dataset_path,
+        normal_folder,
+        abnormal_dir,
+        batch_size
+    ) -> Folder:
+    """
+    Get the dataset ready for training.
 
+    :param dataset_path: path to the root of dataset.
+    :param normal_folder: folder for training.
+    :param abnormal_dir: folder for evaluation.
+    :param batch_size: (int) batch size.
+    """
     print('Process data')
 
     transform = transforms.Compose([
@@ -46,6 +58,13 @@ def preprocess_data(dataset_path, normal_folder, abnormal_dir, batch_size):
 
 
 def test(task_name, weights_path, test_folder):
+    """
+    Test the model trained on a specific task task.
+    :param task_name: (str) name of the task.
+    :param weights_path: (Path) path to the weights file.
+    :param test_folder: (Path) path to the images test folder.
+    :return:
+    """
     print('Begin testing')
     model = Patchcore()
     model.load_state_dict(torch.load(os.path.join(weights_path, f'patchcore_checkpoint_{task_name}.pt')))
@@ -70,7 +89,17 @@ def train(
         train_folder='train/OK',
         eval_folder='val',
         batch_size=32
-    ):
+    ) -> None:
+    """
+    Train the model on a specific task task.
+    :param task_name: (str) name of the task.
+    :param dataset_path: (Path) path to the root of dataset
+    :param weights_path: (Path) path to the weights file.
+    :param save_weights: (bool) whether to save weights.
+    :param train_folder: (str) path to the train folder.
+    :param eval_folder: (str) path to the eval folder.
+    :param batch_size: (int) batch size.
+    """
 
     training_datamodule = preprocess_data(
         dataset_path,
@@ -91,30 +120,6 @@ def train(
     engine.test(datamodule=training_datamodule, model=model)
 
 
-def get_segment(original_image:np.ndarray, heatmap_image:np.ndarray, threshold:float):
-    mask = (heatmap_image ** 2 + 0.2 > threshold)
-    return Image.fromarray((original_image * mask).astype(np.uint8))
-
-
-def get_heatmap(original_image:np.ndarray, heatmap_image:np.ndarray):
-    anomaly_map = np.array((1. - heatmap_image) * 255).astype(np.uint8)
-    heat_img = superimpose_anomaly_map(anomaly_map=anomaly_map, image=original_image, normalize=False)
-    return Image.fromarray(heat_img.astype(np.uint8))
-
-
-def get_detect(original_image:np.ndarray, boxes:list, score:float):
-    detect_img = copy.deepcopy(original_image)
-    # superimpose bounding boxes
-    for (x1, y1, x2, y2) in boxes:
-        detect_img = cv2.rectangle(detect_img, (x1, y1), (x2, y2), (255, 0, 0), 2)
-    detect_img = Image.fromarray(detect_img.astype(np.uint8))
-    # add score
-    draw = ImageDraw.Draw(detect_img)
-    font = ImageFont.load_default()
-    text = f"anomaly score {round(score * 100, 1)}%"
-    position = (10, 5)  # X, Y coordinates
-    draw.text(position, text, font=font, fill=(255, 0, 0))
-    return detect_img
 
 
 def process_frames(
@@ -129,6 +134,20 @@ def process_frames(
         heatmapping: bool=True,
         threshold=0.55,
     ) -> None:
+    """
+
+    :param task_name:
+    :param weights_path: (Path) path to the weights file.
+    :param dataset_path: (Path) path to the root of dataset.
+    :param segment_path: (Path) path to the segment folder.
+    :param heatmap_path: (Path) path to the heatmaps folder.
+    :param detect_path: (Path) path to the detection folder.
+    :param segmentation: (bool) whether to use segmentation or not.
+    :param detection: (bool) whether to use detection or not.
+    :param heatmapping: (bool) whether to use heatmapping or not.
+    :param threshold: (float) threshold for detection or segmentation.
+    :return:
+    """
 
     model = Patchcore()
     model.load_state_dict(torch.load(os.path.join(weights_path, f'patchcore_checkpoint_{task_name}.pt')))
@@ -167,3 +186,28 @@ def process_frames(
             )
             detect_img.save(os.path.join(detect_path, frame_name))
 
+
+def get_segment(original_image:np.ndarray, heatmap_image:np.ndarray, threshold:float):
+    mask = (heatmap_image ** 2 + 0.2 > threshold)
+    return Image.fromarray((original_image * mask).astype(np.uint8))
+
+
+def get_heatmap(original_image:np.ndarray, heatmap_image:np.ndarray):
+    anomaly_map = np.array((1. - heatmap_image) * 255).astype(np.uint8)
+    heat_img = superimpose_anomaly_map(anomaly_map=anomaly_map, image=original_image, normalize=False)
+    return Image.fromarray(heat_img.astype(np.uint8))
+
+
+def get_detect(original_image:np.ndarray, boxes:list, score:float):
+    detect_img = copy.deepcopy(original_image)
+    # superimpose bounding boxes
+    for (x1, y1, x2, y2) in boxes:
+        detect_img = cv2.rectangle(detect_img, (x1, y1), (x2, y2), (255, 0, 0), 2)
+    detect_img = Image.fromarray(detect_img.astype(np.uint8))
+    # add score
+    draw = ImageDraw.Draw(detect_img)
+    font = ImageFont.load_default()
+    text = f"anomaly score {round(score * 100, 1)}%"
+    position = (10, 5)  # X, Y coordinates
+    draw.text(position, text, font=font, fill=(255, 0, 0))
+    return detect_img
