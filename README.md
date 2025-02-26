@@ -51,17 +51,10 @@ Place data in the location specified in the file config.yaml under folders.datas
 A dataset can be extracted from a video. To do so, the video must be placed in the folder videos as `videoname.mp4`.
 Then follow the following commands to extract `n` samples:
 ```bash
-pip install -e .
+python collect_dataset --task=videoname --n_samples=n
 ```
 
 ## Usage
-
-### Collect dataset
-
-```bash
-    python3 collect_dataset --task=videoname --n_samples=n
-```
-where the flag `--from_semiframes` can be used when not enough frames would be "anomaly-free"
 
 ### Train a Model
 
