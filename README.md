@@ -51,7 +51,7 @@ Place data in the location specified in the file config.yaml under folders.datas
 A dataset can be extracted from a video. To do so, the video must be placed in the folder videos as `videoname.mp4`.
 Then follow the following commands to extract `n` samples:
 ```bash
-python collect_dataset --task=videoname --n_samples=n
+python src/collect_dataset --task=videoname --n_samples=n
 ```
 
 ## Usage
@@ -59,7 +59,7 @@ python collect_dataset --task=videoname --n_samples=n
 ### Train a Model
 
 ```bash
-python run_pipeline.py --train --task=dataname
+python src/run_pipeline.py --train --task=dataname
 ```
 where `dataname` is the name of the dataset.
 Customize `config.yaml` to modify model parameters.
@@ -67,13 +67,13 @@ Customize `config.yaml` to modify model parameters.
 ### Test the Model
 
 ```bash
-python run_pipeline.py --test --task=dataname
+python src/run_pipeline.py --test --task=dataname
 ```
 
 ### Generate Heatmaps & Segmentation Maps
 
 ```bash
-python run_pipeline.py --segement --detect --heatmap
+python src/run_pipeline.py --segement --detect --heatmap
 ```
 where the flags `--segement`, `--detect` and `--heatmap` can be deactivated or deactivated whenever segmentation, detection or heatmapping is needed.
 

@@ -33,9 +33,9 @@ if __name__ == "__main__":
     # assemble the paths
     dataset_path = os.path.join(os.getcwd(), args.dataset_folder, args.task)
     weights_path = os.path.join(os.getcwd(), args.weights_folder)
-    segment_path = os.path.join(dataset_path, args.segment)
-    detect_path = os.path.join(dataset_path, args.detect)
-    heatmap_path = os.path.join(dataset_path, args.heatmap)
+    segment_path = os.path.join(dataset_path, args.segment_folder)
+    detect_path = os.path.join(dataset_path, args.detect_folder)
+    heatmap_path = os.path.join(dataset_path, args.heatmap_folder)
 
     if args.train:
         train(
